@@ -5,7 +5,6 @@ import java.util.logging.Logger;
 
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scoreboard.Scoreboard;
 
 import me.xam4lor.events.Events;
 
@@ -13,12 +12,12 @@ public class MainClass  extends JavaPlugin {
 	private Logger log = Logger.getLogger("Minecraft");
 	private boolean gameRunning = false;
 	private HashSet<String> deadPlayers = new HashSet<String>();
-	private Scoreboard sb = null;
 	
 	@Override
 	public void onEnable() {
 		getServer().getPluginManager().registerEvents(new Events(this), this);
 		this.log.info(this.getPluginName() + "Plugin launched");
+		setGameRunning(true);
 	}
 	
 	@Override
@@ -50,9 +49,6 @@ public class MainClass  extends JavaPlugin {
 		this.deadPlayers.add(deadPlayers);
 	}
 	
-	@SuppressWarnings("deprecation")
 	public void setLife(Player entity, int i) {
-		entity.setScoreboard(sb);
-		sb.getObjective("Vie").getScore(entity).setScore(i);
 	}
 }

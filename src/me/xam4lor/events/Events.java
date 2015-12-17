@@ -19,9 +19,6 @@ import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent.RegainReason;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerLoginEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.event.player.PlayerLoginEvent.Result;
 import org.bukkit.event.weather.WeatherChangeEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
@@ -78,14 +75,6 @@ public class Events implements Listener {
 	}
 	
 	@EventHandler
-	public void onPlayerLogin(PlayerLoginEvent ev) {
-		if (this.m.isPlayerDead(ev.getPlayer().getName()) && !this.m.getConfig().getBoolean("allow-reconnect", true)) {
-			ev.setResult(Result.KICK_OTHER);
-			ev.setKickMessage("Vous êtes mort !");
-		}
-	}
-	
-	@EventHandler
 	public void onPlayerJoin(final PlayerJoinEvent ev) {
 		if (!this.m.isGameRunning()) {
 			ev.getPlayer().setGameMode(GameMode.CREATIVE);
@@ -108,11 +97,11 @@ public class Events implements Listener {
 		}
 	}
 	
-	@EventHandler
+	/*@EventHandler EN DEVELOPPEMENT
 	public void onPlayerMove(PlayerMoveEvent ev) {
 		Location l = ev.getTo();
 		Integer mapSize = m.getConfig().getInt("map.size");
-		Integer halfMapSize = (int) Math.floor(mapSize/2);
+		Integer halfMapSize = (int) Math.floor(mapSize / 2);
 		Integer x = l.getBlockX();
 		Integer z = l.getBlockZ();
 		
@@ -131,7 +120,7 @@ public class Events implements Listener {
 		if (x < limitXInf || x > limitXSup || z < limitZInf || z > limitZSup) {
 			ev.setCancelled(true);
 		}
-	}
+	}*/
 	
 	@EventHandler
 	public void onEntityDamage(final EntityDamageEvent ev) {
