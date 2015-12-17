@@ -1,0 +1,8 @@
+name: Switch-The-Patrick-Plugin
+author: xam4lor
+version: 1.0
+main: me.xam4lor.main.MainClass
+commands:
+   sw:
+      description: SwitchThePatrickPlugin
+      usage: /sw <subcommand>
