@@ -56,7 +56,7 @@ public class Events implements Listener {
 			Bukkit.getScheduler().runTaskLater(this.m, new BukkitRunnable() {
 				@Override
 				public void run() {
-					ev.getEntity().kickPlayer("gg");
+					ev.getEntity().kickPlayer("Good Game !");
 				}
 			}, 20L * this.m.getConfig().getInt("kick-on-death.time", 30));
 		}
@@ -71,6 +71,29 @@ public class Events implements Listener {
 		}
 		catch (Exception e) {
 			e.printStackTrace();
+		}
+		
+		ev.setDeathMessage(ChatColor.YELLOW + ev.getEntity().getName() + ChatColor.GREEN + " est mort.");
+		ev.getEntity().setGameMode(GameMode.SPECTATOR);
+		
+		if(m.getPlayerLength() == 1) {
+			for (Player pp : ps) {
+				if(pp.getGameMode() == GameMode.SURVIVAL) {
+					Bukkit.broadcastMessage(ChatColor.YELLOW + ev.getEntity().getName() + ChatColor.GREEN + " gagne la partie !!!");
+					m.setGameRunning(false);
+					pp.setGameMode(GameMode.SPECTATOR);
+					Bukkit.broadcastMessage(ChatColor.RED + "Si vous voulez recommencer une partie, pour plus de sécurité, veuillez relancer votre serveur. Merci !");
+				}
+			}
+		}
+		else if(m.getPlayerLength() == 0) {
+			for (Player pp : ps) {
+				m.setGameRunning(false);
+				pp.setGameMode(GameMode.SPECTATOR);
+			}
+			
+			Bukkit.broadcastMessage(ChatColor.YELLOW + "CrossKill, bravo à tous !!!");
+			Bukkit.broadcastMessage(ChatColor.RED + "Si vous voulez recommencer une partie, pour plus de sécurité, veuillez relancer votre serveur. Merci !");
 		}
 	}
 	

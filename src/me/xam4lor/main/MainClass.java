@@ -1,8 +1,8 @@
 package me.xam4lor.main;
 
-import java.io.File;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.logging.Logger;
@@ -90,8 +90,8 @@ public class MainClass  extends JavaPlugin {
 		obj.setDisplayName(ChatColor.BOLD + "- " + this.getScoreboardName() + " -");
 		obj.setDisplaySlot(DisplaySlot.SIDEBAR);
 		obj.getScore(Bukkit.getOfflinePlayer(ChatColor.GRAY + "Episode: " + ChatColor.WHITE + episode)).setScore(4);
-		obj.getScore(Bukkit.getOfflinePlayer(ChatColor.WHITE + "" + ((File) Bukkit.getServer().getOnlinePlayers()).length() + ChatColor.GRAY + " joueurs")).setScore(3);
-		obj.getScore(Bukkit.getOfflinePlayer("")).setScore(2);
+		obj.getScore(Bukkit.getOfflinePlayer(ChatColor.WHITE + "" + getPlayerLength() + ChatColor.GRAY + " joueurs")).setScore(3);
+		obj.getScore(Bukkit.getOfflinePlayer("---------")).setScore(2);
 		obj.getScore(Bukkit.getOfflinePlayer(ChatColor.WHITE + formatter.format(this.minutesLeft) + ChatColor.GRAY + ":" + ChatColor.WHITE + formatter.format(this.secondsLeft))).setScore(1);
 	}
 	
@@ -136,17 +136,19 @@ public class MainClass  extends JavaPlugin {
 				Bukkit.getScheduler().scheduleSyncRepeatingTask(this, new BukkitRunnable() {
 					@Override
 					public void run() {
-						setMatchInfo();
-						secondsLeft--;
-						if (secondsLeft == -1) {
-							minutesLeft--;
-							secondsLeft = 59;
-						}
-						if (minutesLeft == -1) {
-							minutesLeft = getEpisodeLength();
-							secondsLeft = 0;
-							Bukkit.getServer().broadcastMessage(ChatColor.AQUA + "-------- Fin episode " + episode + " --------");
-							shiftEpisode();
+						if(isGameRunning()) {
+							setMatchInfo();
+							secondsLeft--;
+							if (secondsLeft == -1) {
+								minutesLeft--;
+								secondsLeft = 59;
+							}
+							if (minutesLeft == -1) {
+								minutesLeft = getEpisodeLength();
+								secondsLeft = 0;
+								Bukkit.getServer().broadcastMessage(ChatColor.AQUA + "-------- Fin episode " + episode + " --------");
+								shiftEpisode();
+							}
 						}
 					} 
 				}, 20L, 20L);
@@ -227,6 +229,18 @@ public class MainClass  extends JavaPlugin {
 
 	public HashSet<String> getDeadPlayers() {
 		return deadPlayers;
+	}
+	
+	public int getPlayerLength() {
+		Collection<? extends Player> ps = Bukkit.getServer().getOnlinePlayers();
+		int plLength = 0;
+		
+		for (Player pp : ps) {
+			if(pp.getGameMode() == GameMode.SURVIVAL) {
+				plLength++;
+			}
+		}
+		return plLength;
 	}
 	
 	public boolean isPlayerDead(String name) {
