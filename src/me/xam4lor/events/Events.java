@@ -74,6 +74,7 @@ public class Events implements Listener {
 		}
 	}
 	
+	@SuppressWarnings("deprecation")
 	@EventHandler
 	public void onPlayerJoin(final PlayerJoinEvent ev) {
 		if (!this.m.isGameRunning()) {
@@ -81,6 +82,14 @@ public class Events implements Listener {
 			Location l = ev.getPlayer().getWorld().getSpawnLocation();
 			ev.getPlayer().teleport(l.add(0,1,0));
 		}
+		m.addToScoreboard(ev.getPlayer());
+		Bukkit.getScheduler().runTaskLater(this.m, new BukkitRunnable() {
+			
+			@Override
+			public void run() {
+				m.updatePlayerListName(ev.getPlayer());
+			}
+		}, 1L);
 	}
 	
 	@EventHandler
@@ -96,31 +105,6 @@ public class Events implements Listener {
 			ev.setCancelled(true);
 		}
 	}
-	
-	/*@EventHandler EN DEVELOPPEMENT
-	public void onPlayerMove(PlayerMoveEvent ev) {
-		Location l = ev.getTo();
-		Integer mapSize = m.getConfig().getInt("map.size");
-		Integer halfMapSize = (int) Math.floor(mapSize / 2);
-		Integer x = l.getBlockX();
-		Integer z = l.getBlockZ();
-		
-		Location spawn = ev.getPlayer().getWorld().getSpawnLocation();
-		Integer limitXInf = spawn.add(-halfMapSize, 0, 0).getBlockX();
-		
-		spawn = ev.getPlayer().getWorld().getSpawnLocation();
-		Integer limitXSup = spawn.add(halfMapSize, 0, 0).getBlockX();
-		
-		spawn = ev.getPlayer().getWorld().getSpawnLocation();
-		Integer limitZInf = spawn.add(0, 0, -halfMapSize).getBlockZ();
-		
-		spawn = ev.getPlayer().getWorld().getSpawnLocation();
-		Integer limitZSup = spawn.add(0, 0, halfMapSize).getBlockZ();
-		
-		if (x < limitXInf || x > limitXSup || z < limitZInf || z > limitZSup) {
-			ev.setCancelled(true);
-		}
-	}*/
 	
 	@EventHandler
 	public void onEntityDamage(final EntityDamageEvent ev) {
