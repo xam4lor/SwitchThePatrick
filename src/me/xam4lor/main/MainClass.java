@@ -10,13 +10,16 @@ import java.util.logging.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Difficulty;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
@@ -45,6 +48,7 @@ public class MainClass  extends JavaPlugin {
 		obj.setDisplaySlot(DisplaySlot.PLAYER_LIST);
 		
 		this.setPartyOptions();
+		this.setMatchInfo();
 	}
 	
 	@Override
@@ -83,14 +87,12 @@ public class MainClass  extends JavaPlugin {
 		obj = sb.registerNewObjective(sbobjname, "dummy");
 		obj = sb.getObjective(sbobjname);
 
-		obj.setDisplayName(this.getScoreboardName());
+		obj.setDisplayName(ChatColor.BOLD + "- " + this.getScoreboardName() + " -");
 		obj.setDisplaySlot(DisplaySlot.SIDEBAR);
 		obj.getScore(Bukkit.getOfflinePlayer(ChatColor.GRAY + "Episode: " + ChatColor.WHITE + episode)).setScore(4);
 		obj.getScore(Bukkit.getOfflinePlayer(ChatColor.WHITE + "" + ((File) Bukkit.getServer().getOnlinePlayers()).length() + ChatColor.GRAY + " joueurs")).setScore(3);
 		obj.getScore(Bukkit.getOfflinePlayer("")).setScore(2);
 		obj.getScore(Bukkit.getOfflinePlayer(ChatColor.WHITE + formatter.format(this.minutesLeft) + ChatColor.GRAY + ":" + ChatColor.WHITE + formatter.format(this.secondsLeft))).setScore(1);
-		
-		setMatchInfo();
 	}
 	
 	@SuppressWarnings("deprecation")
@@ -110,7 +112,50 @@ public class MainClass  extends JavaPlugin {
 				return true;
 			}
 			if (a[0].equalsIgnoreCase("start")) {
+				for (Player p : Bukkit.getOnlinePlayers()) {
+					p.setGameMode(GameMode.SURVIVAL);
+					p.setHealth(20);
+					p.setFoodLevel(20);
+					p.setExhaustion(5F);
+					p.getInventory().clear();
+					p.getInventory().setArmorContents(new ItemStack[] {new ItemStack(Material.AIR), new ItemStack(Material.AIR), new ItemStack(Material.AIR), new ItemStack(Material.AIR)});
+					p.setExp(0L + 0F);
+					p.setLevel(0);
+					p.closeInventory();
+					p.getActivePotionEffects().clear();
+					setLife(p, 20);
+				}
+				
+				World w = Bukkit.getWorld("world");
+				w.setTime(getConfig().getLong("daylightCycle.time"));
+				w.setDifficulty(Difficulty.HARD);
+				
+				this.episode = 1;
+				this.minutesLeft = getEpisodeLength();
+				this.secondsLeft = 0;
+				Bukkit.getScheduler().scheduleSyncRepeatingTask(this, new BukkitRunnable() {
+					@Override
+					public void run() {
+						setMatchInfo();
+						secondsLeft--;
+						if (secondsLeft == -1) {
+							minutesLeft--;
+							secondsLeft = 59;
+						}
+						if (minutesLeft == -1) {
+							minutesLeft = getEpisodeLength();
+							secondsLeft = 0;
+							Bukkit.getServer().broadcastMessage(ChatColor.AQUA + "-------- Fin episode " + episode + " --------");
+							shiftEpisode();
+						}
+					} 
+				}, 20L, 20L);
+				
+				Bukkit.getServer().broadcastMessage(ChatColor.GREEN + "--- GO ---");
+				this.setGameRunning(true);
+				return true;
 			}
+			
 			else if (a[0].equalsIgnoreCase("generateWalls")) {
 				pl.sendMessage(ChatColor.GRAY + "Génération en cours...");
 				try {
@@ -161,7 +206,7 @@ public class MainClass  extends JavaPlugin {
 	}
 	
 	private String getScoreboardName() {
-		return null;
+		return this.getConfig().getString("scoreboard");
 	}
 	
 	public void shiftEpisode() {
@@ -169,7 +214,7 @@ public class MainClass  extends JavaPlugin {
 	}
 	
 	public String getPluginName() {
-		return this.getConfig().getString("scoreboard");
+		return "Switch The Patrick";
 	}
 	
 	public boolean isGameRunning() {
@@ -190,6 +235,10 @@ public class MainClass  extends JavaPlugin {
 
 	public void setDeadPlayers(String deadPlayers) {
 		this.deadPlayers.add(deadPlayers);
+	}
+	
+	public Integer getEpisodeLength() {
+		return this.getConfig().getInt("episodeLength");
 	}
 	
 	@SuppressWarnings("deprecation")
