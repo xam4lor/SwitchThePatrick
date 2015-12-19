@@ -4,7 +4,6 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Logger;
@@ -32,7 +31,7 @@ public class MainClass extends JavaPlugin {
 	private boolean gameRunning = false;
 	private HashSet<String> deadPlayers = new HashSet<String>();
 	private Scoreboard sb = null;
-	private String sbobjname = "STP";
+	//private String sbobjname = "STP";
 	private Integer episode = 0;
 	private Integer minutesLeft = 0;
 	private Integer secondsLeft = 0;
@@ -76,15 +75,16 @@ public class MainClass extends JavaPlugin {
 		getServer().getWorlds().get(0).setDifficulty(Difficulty.HARD);
 	}
 	
-	@SuppressWarnings("deprecation")
+	//@SuppressWarnings("deprecation")
 	public void setMatchInfo() {
-		Objective obj = null;
+		Bukkit.getServer().broadcastMessage(ChatColor.GREEN + formatter.format(this.minutesLeft) + ChatColor.GRAY + ":" + ChatColor.GREEN + formatter.format(this.secondsLeft));
+		//CI DESSOUS L'AFFICHAGE DU SCOREBOARD (A DEVELOPPER)
+		/*Objective obj = null;
 		try {
 			obj = sb.getObjective(sbobjname);
 			obj.setDisplaySlot(null);
 			obj.unregister();
-		} catch (Exception e) {
-		}
+		} catch (Exception e) {}
 		
 		Random r = new Random();
 		sbobjname = "STP" + r.nextInt(10000000);
@@ -97,6 +97,15 @@ public class MainClass extends JavaPlugin {
 		obj.getScore(Bukkit.getOfflinePlayer(ChatColor.WHITE + "" + getPlayerLength() + ChatColor.GRAY + " joueurs")).setScore(3);
 		obj.getScore(Bukkit.getOfflinePlayer("---------")).setScore(2);
 		obj.getScore(Bukkit.getOfflinePlayer(ChatColor.WHITE + formatter.format(this.minutesLeft) + ChatColor.GRAY + ":" + ChatColor.WHITE + formatter.format(this.secondsLeft))).setScore(1);
+		*/
+	}
+	
+	private void Switch() {
+		//faire le système de switch
+	}
+	
+	private void tpPlayers() {
+		//faire le systeme de tp
 	}
 	
 	private int switchs[][];
@@ -113,11 +122,12 @@ public class MainClass extends JavaPlugin {
 		}
 	}
 	
-	public void Switch(Integer episode, Integer minutesLeft, Integer secondsLeft) {
+	public void SwitchTest(Integer episode, Integer minutesLeft, Integer secondsLeft) {
 		for(int i = 0; i < switchs.length; i++) {
 			if(episode == switchs[i][0]) {
-				if((60 - minutesLeft) == switchs[i][1]) {
+				if(minutesLeft == switchs[i][1] && secondsLeft == 0) {
 					Bukkit.getServer().broadcastMessage(ChatColor.GREEN + "Switch en cours !");
+					Switch();
 				}
 			}
 		}
@@ -157,7 +167,7 @@ public class MainClass extends JavaPlugin {
 					Bukkit.getServer().broadcastMessage(ChatColor.AQUA + "-------- Fin episode " + episode + " --------");
 					shiftEpisode();
 				}
-				Switch(episode, minutesLeft, secondsLeft);
+				SwitchTest(episode, minutesLeft, secondsLeft);
 			}
 	    }
 	 }
@@ -193,6 +203,8 @@ public class MainClass extends JavaPlugin {
 					setLife(p, 20);
 				}
 				
+				tpPlayers();
+				
 				World w = Bukkit.getWorld("world");
 				w.setTime(getConfig().getLong("daylightCycle.time"));
 				w.setDifficulty(Difficulty.HARD);
@@ -202,7 +214,7 @@ public class MainClass extends JavaPlugin {
 				this.secondsLeft = 0;
 				
 				Timer timer = new Timer();
-				timer.schedule(new updateTimer(), 0, 500);
+				timer.schedule(new updateTimer(), 0, 1000);
 				
 				Bukkit.getServer().broadcastMessage(ChatColor.GREEN + "--- GO ---");
 				this.ShowConfigPlayer(pl);
@@ -258,7 +270,7 @@ public class MainClass extends JavaPlugin {
 		}
 		return false;
 	}
-	
+
 	public void ShowConfigLog() {
 		this.log.info("[KTP] Default config:");
 		this.log.info("-----------------------------------");
@@ -301,6 +313,7 @@ public class MainClass extends JavaPlugin {
 		pl.sendMessage(ChatColor.RED + "-----------------------------------");
 	}
 	
+	@SuppressWarnings("unused")
 	private String getScoreboardName() {
 		return this.getConfig().getString("scoreboard");
 	}
