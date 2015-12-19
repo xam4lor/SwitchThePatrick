@@ -7,7 +7,12 @@ import org.bukkit.entity.Player;
 
 public class ShowConfig {
 	private Logger log = Logger.getLogger("Minecraft");
-	private MainClass m = null;
+	
+	public MainClass m = null;
+	
+	public ShowConfig(MainClass m) {
+		this.m = m;
+	}
 	
 	public ShowConfig() {
 		this.log.info("[KTP] Default config:");

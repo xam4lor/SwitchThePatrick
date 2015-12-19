@@ -12,6 +12,11 @@ public class SwitchPlayers {
 	 */
 	
 	public MainClass m = null;
+	
+	public SwitchPlayers(MainClass m) {
+		this.m = m;
+	}
+	
 	@SuppressWarnings("unused")
 	private int switchs[][];
 	private Logger log = Logger.getLogger("Minecraft");

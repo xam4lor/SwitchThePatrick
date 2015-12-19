@@ -26,7 +26,7 @@ import org.bukkit.scoreboard.Scoreboard;
 
 import me.xam4lor.events.Events;
 
-public class MainClass  extends JavaPlugin {
+public class MainClass extends JavaPlugin {
 	private Logger log = Logger.getLogger("Minecraft");
 	private boolean gameRunning = false;
 	private HashSet<String> deadPlayers = new HashSet<String>();
@@ -40,6 +40,8 @@ public class MainClass  extends JavaPlugin {
 	@Override
 	public void onEnable() {
 		getServer().getPluginManager().registerEvents(new Events(this), this);
+		new SwitchPlayers(this);
+		new ShowConfig(this);
 		this.log.info(this.getPluginName() + "Plugin launched");
 		
 		sb = Bukkit.getServer().getScoreboardManager().getNewScoreboard();
@@ -49,8 +51,8 @@ public class MainClass  extends JavaPlugin {
 		
 		this.setPartyOptions();
 		this.setMatchInfo();
-		new SwitchPlayers();
-		new ShowConfig();
+		/*new SwitchPlayers();
+		new ShowConfig();*/
 	}
 	
 	@Override
@@ -151,13 +153,13 @@ public class MainClass  extends JavaPlugin {
 								Bukkit.getServer().broadcastMessage(ChatColor.AQUA + "-------- Fin episode " + episode + " --------");
 								shiftEpisode();
 							}
-							new SwitchPlayers(episode, minutesLeft, secondsLeft);
+							//new SwitchPlayers(episode, minutesLeft, secondsLeft);
 						}
 					} 
 				}, 20L, 20L);
 				
 				Bukkit.getServer().broadcastMessage(ChatColor.GREEN + "--- GO ---");
-				new ShowConfig(pl);
+				//new ShowConfig(pl);
 				this.setGameRunning(true);
 				return true;
 			}
