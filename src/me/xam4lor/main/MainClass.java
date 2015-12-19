@@ -40,8 +40,6 @@ public class MainClass extends JavaPlugin {
 	@Override
 	public void onEnable() {
 		getServer().getPluginManager().registerEvents(new Events(this), this);
-		new SwitchPlayers(this);
-		new ShowConfig(this);
 		this.log.info(this.getPluginName() + "Plugin launched");
 		
 		sb = Bukkit.getServer().getScoreboardManager().getNewScoreboard();
@@ -51,8 +49,9 @@ public class MainClass extends JavaPlugin {
 		
 		this.setPartyOptions();
 		this.setMatchInfo();
-		/*new SwitchPlayers();
-		new ShowConfig();*/
+		this.ShowConfigLog();
+		
+		SwitchInit();
 	}
 	
 	@Override
@@ -97,6 +96,44 @@ public class MainClass extends JavaPlugin {
 		obj.getScore(Bukkit.getOfflinePlayer(ChatColor.WHITE + "" + getPlayerLength() + ChatColor.GRAY + " joueurs")).setScore(3);
 		obj.getScore(Bukkit.getOfflinePlayer("---------")).setScore(2);
 		obj.getScore(Bukkit.getOfflinePlayer(ChatColor.WHITE + formatter.format(this.minutesLeft) + ChatColor.GRAY + ":" + ChatColor.WHITE + formatter.format(this.secondsLeft))).setScore(1);
+	}
+	
+	@SuppressWarnings("unused")
+	private int switchs[][];
+	
+	public void SwitchInit() {
+		//initialisation des switchs
+		int switchs[][] = SwitchList();
+		if(switchs != null) {
+			this.switchs = switchs;
+			this.log.info("Configuration des switchs terminée avec succès !");
+		}
+		else {
+			this.log.info("Erreur dans la configuration des switchs.");
+		}
+	}
+	
+	public void Switch(Integer episode, Integer minutesLeft, Integer secondsLeft) {
+		//test d'un switch
+	}
+	
+	private int[][] SwitchList() {
+		try {
+			VoidTbl tbl = new VoidTbl();
+			int switchNumber = this.getConfig().getInt("switch.number");
+			int switchs[][] = tbl.getTableau();
+			
+			for(int i = 0; i < switchNumber; i++) {
+				switchs[i][0] = this.getConfig().getInt("switch." + (i + 1) + ".episode");
+				switchs[i][1] = this.getConfig().getInt("switch." + (i + 1) + ".time");
+			}
+			return switchs;
+		}
+		catch(NullPointerException e) {
+			e.printStackTrace();
+			Bukkit.getServer().broadcastMessage(ChatColor.RED + "Erreur lors du lancement de la partie, le nombre de switchs est trop élevé. Regarder la console pour plus de détails.");
+			return null;
+		}
 	}
 	
 	@SuppressWarnings("deprecation")
@@ -153,13 +190,13 @@ public class MainClass extends JavaPlugin {
 								Bukkit.getServer().broadcastMessage(ChatColor.AQUA + "-------- Fin episode " + episode + " --------");
 								shiftEpisode();
 							}
-							//new SwitchPlayers(episode, minutesLeft, secondsLeft);
+							Switch(episode, minutesLeft, secondsLeft);
 						}
 					} 
 				}, 20L, 20L);
 				
 				Bukkit.getServer().broadcastMessage(ChatColor.GREEN + "--- GO ---");
-				//new ShowConfig(pl);
+				this.ShowConfigPlayer(pl);
 				this.setGameRunning(true);
 				return true;
 			}
@@ -211,6 +248,48 @@ public class MainClass extends JavaPlugin {
 			}
 		}
 		return false;
+	}
+	
+	public void ShowConfigLog() {
+		this.log.info("[KTP] Default config:");
+		this.log.info("-----------------------------------");
+		this.log.info("episodeLength: " + this.getConfig().getInt("episodeLength"));
+		this.log.info("weather: " + this.getConfig().getBoolean("weather"));
+		this.log.info("map:");
+		this.log.info("      size:" + this.getConfig().getInt("map.size"));
+		this.log.info("      wall:");
+		this.log.info("            height:" + this.getConfig().getInt("map.wall.height"));
+		this.log.info("            block:" + this.getConfig().getInt("map.wall.block"));
+		this.log.info("daylightCycle:");
+		this.log.info("      do:" + this.getConfig().getBoolean("daylightCycle.do"));
+		this.log.info("      time:" + this.getConfig().getInt("daylightCycle.time"));
+		this.log.info("scoreboard: " + this.getConfig().getString("scoreboard"));
+		this.log.info("kick-on-death:");
+		this.log.info("      kick:" + this.getConfig().getBoolean("kick-on-death.kick"));
+		this.log.info("      time:" + this.getConfig().getInt("kick-on-death.time"));
+		this.log.info("naturalRegen: " + this.getConfig().getBoolean("naturalRegen"));
+		this.log.info("-----------------------------------");
+	}
+	
+	public void ShowConfigPlayer(Player pl) {
+		pl.sendMessage(ChatColor.RED + "[KTP] Default config:");
+		pl.sendMessage(ChatColor.RED + "-----------------------------------");
+		pl.sendMessage(ChatColor.WHITE + "episodeLength: " + this.getConfig().getInt("episodeLength"));
+		pl.sendMessage(ChatColor.WHITE + "weather: " + this.getConfig().getBoolean("weather"));
+		pl.sendMessage(ChatColor.WHITE + "map:");
+		pl.sendMessage(ChatColor.WHITE + "      size:" + this.getConfig().getInt("map.size"));
+		pl.sendMessage(ChatColor.WHITE + "      wall:");
+		pl.sendMessage(ChatColor.WHITE + "            height:" + this.getConfig().getInt("map.wall.height"));
+		pl.sendMessage(ChatColor.WHITE + "            block:" + this.getConfig().getInt("map.wall.block"));
+		pl.sendMessage(ChatColor.WHITE + "daylightCycle:");
+		pl.sendMessage(ChatColor.WHITE + "      do:" + this.getConfig().getBoolean("daylightCycle.do"));
+		pl.sendMessage(ChatColor.WHITE + "      time:" + this.getConfig().getInt("daylightCycle.time"));
+		pl.sendMessage(ChatColor.WHITE + "scoreboard: " + this.getConfig().getString("scoreboard"));
+		pl.sendMessage(ChatColor.WHITE + "kick-on-death:");
+		pl.sendMessage(ChatColor.WHITE + "      kick:" + this.getConfig().getBoolean("kick-on-death.kick"));
+		pl.sendMessage(ChatColor.WHITE + "      time:" + this.getConfig().getInt("kick-on-death.time"));
+		pl.sendMessage(ChatColor.WHITE + "naturalRegen: " + this.getConfig().getBoolean("naturalRegen"));
+		pl.sendMessage(ChatColor.RED + "-----------------------------------");
 	}
 	
 	private String getScoreboardName() {
