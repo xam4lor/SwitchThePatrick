@@ -13,3 +13,14 @@ kick-on-death:
     kick: true
     time: 30
 naturalRegen: false
+switch:
+    number: 3
+    1:
+        episode: 2
+        time: 10
+    2:
+        episode: 3
+        time: 10
+    3:
+        episode: 4
+        time: 10

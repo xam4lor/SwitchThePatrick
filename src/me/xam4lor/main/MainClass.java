@@ -49,6 +49,8 @@ public class MainClass  extends JavaPlugin {
 		
 		this.setPartyOptions();
 		this.setMatchInfo();
+		new SwitchPlayers();
+		new ShowConfig();
 	}
 	
 	@Override
@@ -149,11 +151,13 @@ public class MainClass  extends JavaPlugin {
 								Bukkit.getServer().broadcastMessage(ChatColor.AQUA + "-------- Fin episode " + episode + " --------");
 								shiftEpisode();
 							}
+							new SwitchPlayers(episode, minutesLeft, secondsLeft);
 						}
 					} 
 				}, 20L, 20L);
 				
 				Bukkit.getServer().broadcastMessage(ChatColor.GREEN + "--- GO ---");
+				new ShowConfig(pl);
 				this.setGameRunning(true);
 				return true;
 			}
