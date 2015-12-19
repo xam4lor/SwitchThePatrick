@@ -5,6 +5,8 @@ import java.text.NumberFormat;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
@@ -19,7 +21,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
@@ -98,7 +99,6 @@ public class MainClass extends JavaPlugin {
 		obj.getScore(Bukkit.getOfflinePlayer(ChatColor.WHITE + formatter.format(this.minutesLeft) + ChatColor.GRAY + ":" + ChatColor.WHITE + formatter.format(this.secondsLeft))).setScore(1);
 	}
 	
-	@SuppressWarnings("unused")
 	private int switchs[][];
 	
 	public void SwitchInit() {
@@ -114,7 +114,13 @@ public class MainClass extends JavaPlugin {
 	}
 	
 	public void Switch(Integer episode, Integer minutesLeft, Integer secondsLeft) {
-		//test d'un switch
+		for(int i = 0; i < switchs.length; i++) {
+			if(episode == switchs[i][0]) {
+				if((60 - minutesLeft) == switchs[i][1]) {
+					Bukkit.getServer().broadcastMessage(ChatColor.GREEN + "Switch en cours !");
+				}
+			}
+		}
 	}
 	
 	private int[][] SwitchList() {
@@ -135,6 +141,26 @@ public class MainClass extends JavaPlugin {
 			return null;
 		}
 	}
+	
+	class updateTimer extends TimerTask {
+	    public void run() {
+	    	if(isGameRunning()) {
+				setMatchInfo();
+				secondsLeft--;
+				if(secondsLeft == -1) {
+					minutesLeft--;
+					secondsLeft = 59;
+				}
+				if(minutesLeft == -1) {
+					minutesLeft = getEpisodeLength();
+					secondsLeft = 0;
+					Bukkit.getServer().broadcastMessage(ChatColor.AQUA + "-------- Fin episode " + episode + " --------");
+					shiftEpisode();
+				}
+				Switch(episode, minutesLeft, secondsLeft);
+			}
+	    }
+	 }
 	
 	@SuppressWarnings("deprecation")
 	public boolean onCommand(final CommandSender s, Command c, String l, String[] a) {
@@ -174,26 +200,9 @@ public class MainClass extends JavaPlugin {
 				this.episode = 1;
 				this.minutesLeft = getEpisodeLength();
 				this.secondsLeft = 0;
-				Bukkit.getScheduler().scheduleSyncRepeatingTask(this, new BukkitRunnable() {
-					@Override
-					public void run() {
-						if(isGameRunning()) {
-							setMatchInfo();
-							secondsLeft--;
-							if (secondsLeft == -1) {
-								minutesLeft--;
-								secondsLeft = 59;
-							}
-							if (minutesLeft == -1) {
-								minutesLeft = getEpisodeLength();
-								secondsLeft = 0;
-								Bukkit.getServer().broadcastMessage(ChatColor.AQUA + "-------- Fin episode " + episode + " --------");
-								shiftEpisode();
-							}
-							Switch(episode, minutesLeft, secondsLeft);
-						}
-					} 
-				}, 20L, 20L);
+				
+				Timer timer = new Timer();
+				timer.schedule(new updateTimer(), 0, 500);
 				
 				Bukkit.getServer().broadcastMessage(ChatColor.GREEN + "--- GO ---");
 				this.ShowConfigPlayer(pl);
@@ -274,21 +283,21 @@ public class MainClass extends JavaPlugin {
 	public void ShowConfigPlayer(Player pl) {
 		pl.sendMessage(ChatColor.RED + "[KTP] Default config:");
 		pl.sendMessage(ChatColor.RED + "-----------------------------------");
-		pl.sendMessage(ChatColor.WHITE + "episodeLength: " + this.getConfig().getInt("episodeLength"));
-		pl.sendMessage(ChatColor.WHITE + "weather: " + this.getConfig().getBoolean("weather"));
+		pl.sendMessage(ChatColor.WHITE + "episodeLength: " + ChatColor.GRAY + this.getConfig().getInt("episodeLength"));
+		pl.sendMessage(ChatColor.WHITE + "weather: " + ChatColor.GRAY + this.getConfig().getBoolean("weather"));
 		pl.sendMessage(ChatColor.WHITE + "map:");
-		pl.sendMessage(ChatColor.WHITE + "      size:" + this.getConfig().getInt("map.size"));
+		pl.sendMessage(ChatColor.WHITE + "      size: " + ChatColor.GRAY + this.getConfig().getInt("map.size"));
 		pl.sendMessage(ChatColor.WHITE + "      wall:");
-		pl.sendMessage(ChatColor.WHITE + "            height:" + this.getConfig().getInt("map.wall.height"));
-		pl.sendMessage(ChatColor.WHITE + "            block:" + this.getConfig().getInt("map.wall.block"));
+		pl.sendMessage(ChatColor.WHITE + "            height: " + ChatColor.GRAY + this.getConfig().getInt("map.wall.height"));
+		pl.sendMessage(ChatColor.WHITE + "            block: " + ChatColor.GRAY + this.getConfig().getInt("map.wall.block"));
 		pl.sendMessage(ChatColor.WHITE + "daylightCycle:");
-		pl.sendMessage(ChatColor.WHITE + "      do:" + this.getConfig().getBoolean("daylightCycle.do"));
-		pl.sendMessage(ChatColor.WHITE + "      time:" + this.getConfig().getInt("daylightCycle.time"));
-		pl.sendMessage(ChatColor.WHITE + "scoreboard: " + this.getConfig().getString("scoreboard"));
-		pl.sendMessage(ChatColor.WHITE + "kick-on-death:");
-		pl.sendMessage(ChatColor.WHITE + "      kick:" + this.getConfig().getBoolean("kick-on-death.kick"));
-		pl.sendMessage(ChatColor.WHITE + "      time:" + this.getConfig().getInt("kick-on-death.time"));
-		pl.sendMessage(ChatColor.WHITE + "naturalRegen: " + this.getConfig().getBoolean("naturalRegen"));
+		pl.sendMessage(ChatColor.WHITE + "      do: " + ChatColor.GRAY + this.getConfig().getBoolean("daylightCycle.do"));
+		pl.sendMessage(ChatColor.WHITE + "      time: " + ChatColor.GRAY + this.getConfig().getInt("daylightCycle.time"));
+		pl.sendMessage(ChatColor.WHITE + "scoreboard: " + ChatColor.GRAY + this.getConfig().getString("scoreboard"));
+		pl.sendMessage(ChatColor.WHITE + "kick-on-death: ");
+		pl.sendMessage(ChatColor.WHITE + "      kick: " + ChatColor.GRAY + this.getConfig().getBoolean("kick-on-death.kick"));
+		pl.sendMessage(ChatColor.WHITE + "      time: " + ChatColor.GRAY + this.getConfig().getInt("kick-on-death.time"));
+		pl.sendMessage(ChatColor.WHITE + "naturalRegen: " + ChatColor.GRAY + this.getConfig().getBoolean("naturalRegen"));
 		pl.sendMessage(ChatColor.RED + "-----------------------------------");
 	}
 	
