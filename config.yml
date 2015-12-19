@@ -1,7 +1,7 @@
 episodeLength: 1
 weather: false
 map:
-    size: 2000
+    size: 1700
     wall:
         height: 128
         block: 7
