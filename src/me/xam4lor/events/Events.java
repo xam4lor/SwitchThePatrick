@@ -9,6 +9,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.SkullType;
 import org.bukkit.Sound;
+import org.bukkit.conversations.Conversation;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -18,6 +19,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent.RegainReason;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.weather.WeatherChangeEvent;
 import org.bukkit.inventory.ItemStack;
@@ -132,7 +134,7 @@ public class Events implements Listener {
 	@EventHandler
 	public void onEntityDamage(final EntityDamageEvent ev) {
 		if (ev.getEntity() instanceof Player) {
-			if (!this.m.isGameRunning()) {
+			if (!this.m.isGameRunning() || !m.domageIsOn) {
 				ev.setCancelled(true);
 			}
 		}
@@ -142,6 +144,25 @@ public class Events implements Listener {
 	public void onEntityRegainHealth(final EntityRegainHealthEvent ev) {
 		if (ev.getRegainReason() == RegainReason.SATIATED && !m.getConfig().getBoolean("naturalRegen")) {
 			ev.setCancelled(true);
+		}
+	}
+	
+	@EventHandler
+	public void onInventoryClick(InventoryClickEvent ev) {
+		if (ev.getInventory().getName().equals("- Teams -")) {
+			Player pl = (Player) ev.getWhoClicked();
+			ev.setCancelled(true);
+			if (ev.getCurrentItem().getType() == Material.DIAMOND) {
+				pl.closeInventory();
+				m.getConversationFactory("teamPrompt").buildConversation(pl).begin();
+			}
+			else if (ev.getCurrentItem().getType() == Material.BEACON) {
+				pl.closeInventory();
+				Conversation c = m.getConversationFactory("playerPrompt").buildConversation(pl);
+				c.getContext().setSessionData("nomTeam", ChatColor.stripColor(ev.getCurrentItem().getItemMeta().getDisplayName()));
+				c.getContext().setSessionData("color", m.getTeam(ChatColor.stripColor(ev.getCurrentItem().getItemMeta().getDisplayName())).getChatColor());
+				c.begin();
+			}
 		}
 	}
 	

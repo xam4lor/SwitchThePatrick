@@ -1,9 +1,16 @@
 package me.xam4lor.main;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Logger;
@@ -17,28 +24,70 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.conversations.ConversationAbandonedEvent;
+import org.bukkit.conversations.ConversationAbandonedListener;
+import org.bukkit.conversations.ConversationFactory;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 
 import me.xam4lor.events.Events;
+import me.xam4lor.teams.SwPrompts;
+import me.xam4lor.teams.SwTeams;
 
-public class MainClass extends JavaPlugin {
+public class MainClass extends JavaPlugin implements ConversationAbandonedListener {
 	private Logger log = Logger.getLogger("Minecraft");
 	private boolean gameRunning = false;
 	private HashSet<String> deadPlayers = new HashSet<String>();
 	private Scoreboard sb = null;
-	//private String sbobjname = "STP";
+	private String sbobjname = "STP";
 	private Integer episode = 0;
 	private Integer minutesLeft = 0;
 	private Integer secondsLeft = 0;
 	private NumberFormat formatter = new DecimalFormat("00");
+	private ArrayList<SwTeams> teams = new ArrayList<SwTeams>();
+	private HashMap<String, ConversationFactory> cfs = new HashMap<String, ConversationFactory>();
+	private LinkedList<Location> loc = new LinkedList<Location>();
+	private SwPrompts swp = null;
+	private Random random = null;
+	public boolean domageIsOn = false;
 	
 	@Override
 	public void onEnable() {
+		
+		File positions = new File("positions.txt");
+		if (positions.exists()) {
+			BufferedReader br = null;
+			try {
+				br = new BufferedReader(new FileReader(positions));
+				String line;
+				while ((line = br.readLine()) != null) {
+					String[] l = line.split(",");
+					getLogger().info("Adding position "+Integer.parseInt(l[0])+","+Integer.parseInt(l[1])+" from positions.txt");
+					addLocation(Integer.parseInt(l[0]), Integer.parseInt(l[1]));
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				try { if (br != null) br.close(); }
+				catch (Exception e) { e.printStackTrace(); }
+			}
+			
+		}
+		
+		else {
+			this.log.info("Fichier positions.txt introuvable !");
+		}
+		
+		random = new Random();
+		
+		swp = new SwPrompts(this);
 		getServer().getPluginManager().registerEvents(new Events(this), this);
 		this.log.info(this.getPluginName() + "Plugin launched");
 		
@@ -46,6 +95,22 @@ public class MainClass extends JavaPlugin {
 		Objective obj = sb.registerNewObjective("Vie", "health");
 		obj.setDisplayName("Vie");
 		obj.setDisplaySlot(DisplaySlot.PLAYER_LIST);
+		
+		cfs.put("teamPrompt", new ConversationFactory(this)
+		.withModality(true)
+		.withFirstPrompt(swp.getTNP())
+		.withEscapeSequence("/cancel")
+		.thatExcludesNonPlayersWithMessage("Il faut être un joueur ingame.")
+		.withLocalEcho(false)
+		.addConversationAbandonedListener(this));
+		
+		cfs.put("playerPrompt", new ConversationFactory(this)
+		.withModality(true)
+		.withFirstPrompt(swp.getPP())
+		.withEscapeSequence("/cancel")
+		.thatExcludesNonPlayersWithMessage("Il faut être un joueur ingame.")
+		.withLocalEcho(false)
+		.addConversationAbandonedListener(this));
 		
 		this.setPartyOptions();
 		this.setMatchInfo();
@@ -75,11 +140,9 @@ public class MainClass extends JavaPlugin {
 		getServer().getWorlds().get(0).setDifficulty(Difficulty.HARD);
 	}
 	
-	//@SuppressWarnings("deprecation")
+	@SuppressWarnings("deprecation")
 	public void setMatchInfo() {
-		Bukkit.getServer().broadcastMessage(ChatColor.GREEN + formatter.format(this.minutesLeft) + ChatColor.GRAY + ":" + ChatColor.GREEN + formatter.format(this.secondsLeft));
-		//CI DESSOUS L'AFFICHAGE DU SCOREBOARD (A DEVELOPPER)
-		/*Objective obj = null;
+		Objective obj = null;
 		try {
 			obj = sb.getObjective(sbobjname);
 			obj.setDisplaySlot(null);
@@ -93,19 +156,25 @@ public class MainClass extends JavaPlugin {
 
 		obj.setDisplayName(ChatColor.BOLD + "- " + this.getScoreboardName() + " -");
 		obj.setDisplaySlot(DisplaySlot.SIDEBAR);
-		obj.getScore(Bukkit.getOfflinePlayer(ChatColor.GRAY + "Episode: " + ChatColor.WHITE + episode)).setScore(4);
-		obj.getScore(Bukkit.getOfflinePlayer(ChatColor.WHITE + "" + getPlayerLength() + ChatColor.GRAY + " joueurs")).setScore(3);
-		obj.getScore(Bukkit.getOfflinePlayer("---------")).setScore(2);
-		obj.getScore(Bukkit.getOfflinePlayer(ChatColor.WHITE + formatter.format(this.minutesLeft) + ChatColor.GRAY + ":" + ChatColor.WHITE + formatter.format(this.secondsLeft))).setScore(1);
-		*/
+		obj.getScore(Bukkit.getOfflinePlayer(ChatColor.GRAY+"Episode "+ChatColor.WHITE+episode)).setScore(5);
+		obj.getScore(Bukkit.getOfflinePlayer(ChatColor.WHITE + "" + Bukkit.getServer().getOnlinePlayers().toArray().length + ChatColor.GRAY + " joueurs")).setScore(4);
+		obj.getScore(Bukkit.getOfflinePlayer(ChatColor.WHITE+""+getAliveTeams().size()+ChatColor.GRAY+" teams")).setScore(3);
+		obj.getScore(Bukkit.getOfflinePlayer("----")).setScore(2);
+		obj.getScore(Bukkit.getOfflinePlayer(ChatColor.WHITE+formatter.format(this.minutesLeft)+ChatColor.GRAY+":"+ChatColor.WHITE+formatter.format(this.secondsLeft))).setScore(1);
+	}
+	
+	private ArrayList<SwTeams> getAliveTeams() {
+		ArrayList<SwTeams> aliveTeams = new ArrayList<SwTeams>();
+		for (SwTeams t : teams) {
+			for (Player p : t.getPlayers()) {
+				if (p.isOnline() && !aliveTeams.contains(t)) aliveTeams.add(t);
+			}
+		}
+		return aliveTeams;
 	}
 	
 	private void Switch() {
 		//faire le système de switch
-	}
-	
-	private void tpPlayers() {
-		//faire le systeme de tp
 	}
 	
 	private int switchs[][];
@@ -185,40 +254,101 @@ public class MainClass extends JavaPlugin {
 				return true;
 			}
 			if (a.length == 0) {
-				pl.sendMessage("Usage : /sw <start|generateWalls>");
+				pl.sendMessage("Usage : /sw <start|generateWalls|team|addspawn>");
 				return true;
 			}
 			if (a[0].equalsIgnoreCase("start")) {
-				for (Player p : Bukkit.getOnlinePlayers()) {
-					p.setGameMode(GameMode.SURVIVAL);
-					p.setHealth(20);
-					p.setFoodLevel(20);
-					p.setExhaustion(5F);
-					p.getInventory().clear();
-					p.getInventory().setArmorContents(new ItemStack[] {new ItemStack(Material.AIR), new ItemStack(Material.AIR), new ItemStack(Material.AIR), new ItemStack(Material.AIR)});
-					p.setExp(0L + 0F);
-					p.setLevel(0);
-					p.closeInventory();
-					p.getActivePotionEffects().clear();
-					setLife(p, 20);
+				if (teams.size() == 0) {
+					for (Player p : getServer().getOnlinePlayers()) {
+						SwTeams swt = new SwTeams(p.getName(), p.getName(), ChatColor.WHITE, this);
+						swt.addPlayer(p);
+						teams.add(swt);
+					}
+				}
+				if (loc.size() < teams.size()) {
+					s.sendMessage(ChatColor.RED+"Pas assez de positions de TP");
+					return true;
+				}
+				else {
+					LinkedList<Location> unusedTP = loc;
+					for (final SwTeams t : teams) {
+						final Location lo = unusedTP.get(this.random.nextInt(unusedTP.size()));
+						t.teleportTo(lo);
+						for (Player p : t.getPlayers()) {
+							p.setGameMode(GameMode.SURVIVAL);
+							p.setHealth(20);
+							p.setFoodLevel(20);
+							p.setExhaustion(5F);
+							p.getInventory().clear();
+							p.getInventory().setArmorContents(new ItemStack[] {new ItemStack(Material.AIR), new ItemStack(Material.AIR), 
+									new ItemStack(Material.AIR), new ItemStack(Material.AIR)});
+							p.setExp(0L+0F);
+							p.setLevel(0);
+							p.closeInventory();
+							p.getActivePotionEffects().clear();
+							setLife(p, 20);
+						}
+						
+						unusedTP.remove(lo);
+					}
+					
+					Bukkit.getScheduler().runTaskLater(this, new BukkitRunnable() {
+						@Override
+						public void run() {
+							domageIsOn = true;
+						}
+					}, 600L);
+					
+					World w = Bukkit.getWorld("world");
+					w.setTime(getConfig().getLong("daylightCycle.time"));
+					w.setDifficulty(Difficulty.HARD);
+					
+					this.episode = 1;
+					this.minutesLeft = getEpisodeLength();
+					this.secondsLeft = 0;
+					
+					Timer timer = new Timer();
+					timer.schedule(new updateTimer(), 0, 1000);
+					
+					Bukkit.getServer().broadcastMessage(ChatColor.GREEN + "--- GO ---");
+					this.ShowConfigPlayer(pl);
+					this.setGameRunning(true);
+					return true;
+				}
+			}
+			
+			else if (a[0].equalsIgnoreCase("team")) {
+				Inventory iv = this.getServer().createInventory(pl, 54, "- Teams -");
+				Integer slot = 0;
+				ItemStack is = null;
+				
+				for (SwTeams t : teams) {
+					is = new ItemStack(Material.BEACON, t.getPlayers().size());
+					ItemMeta im = is.getItemMeta();
+					im.setDisplayName(t.getChatColor() + t.getDisplayName());
+					ArrayList<String> lore = new ArrayList<String>();
+					for (Player p : t.getPlayers()) {
+						lore.add("- " + p.getDisplayName());
+					}
+					im.setLore(lore);
+					is.setItemMeta(im);
+					iv.setItem(slot, is);
+					slot++;
 				}
 				
-				tpPlayers();
+				ItemStack is2 = new ItemStack(Material.DIAMOND);
+				ItemMeta im2 = is2.getItemMeta();
+				im2.setDisplayName(ChatColor.AQUA + "" + ChatColor.ITALIC + "Créer une team");
+				is2.setItemMeta(im2);
+				iv.setItem(53, is2);
 				
-				World w = Bukkit.getWorld("world");
-				w.setTime(getConfig().getLong("daylightCycle.time"));
-				w.setDifficulty(Difficulty.HARD);
-				
-				this.episode = 1;
-				this.minutesLeft = getEpisodeLength();
-				this.secondsLeft = 0;
-				
-				Timer timer = new Timer();
-				timer.schedule(new updateTimer(), 0, 1000);
-				
-				Bukkit.getServer().broadcastMessage(ChatColor.GREEN + "--- GO ---");
-				this.ShowConfigPlayer(pl);
-				this.setGameRunning(true);
+				pl.openInventory(iv);
+				return true;
+			}
+			
+			else if (a[0].equalsIgnoreCase("addspawn")) {
+				addLocation(pl.getLocation().getBlockX(), pl.getLocation().getBlockZ());
+				pl.sendMessage(ChatColor.DARK_GRAY + "Position ajoutée: " + ChatColor.GRAY + pl.getLocation().getBlockX() + "," + pl.getLocation().getBlockZ());
 				return true;
 			}
 			
@@ -267,6 +397,10 @@ public class MainClass extends JavaPlugin {
 				pl.sendMessage(ChatColor.GRAY + "Génération terminée.");
 				return true;
 			}
+			else {
+				pl.sendMessage("Usage : /sw <start|generateWalls|team|addspawn>");
+				return true;
+			}
 		}
 		return false;
 	}
@@ -313,7 +447,6 @@ public class MainClass extends JavaPlugin {
 		pl.sendMessage(ChatColor.RED + "-----------------------------------");
 	}
 	
-	@SuppressWarnings("unused")
 	private String getScoreboardName() {
 		return this.getConfig().getString("scoreboard");
 	}
@@ -380,5 +513,40 @@ public class MainClass extends JavaPlugin {
 		player.setScoreboard(sb);
 		sb.getObjective("Vie").getScore(player).setScore(0);
 		this.updatePlayerListName(player);
+	}
+	
+	public ConversationFactory getConversationFactory(String string) {
+		if (cfs.containsKey(string)) return cfs.get(string);
+		return null;
+	}
+	
+	public Scoreboard getScoreboard() {
+		return sb;
+	}
+	
+	public void addLocation(int x, int z) {
+		loc.add(new Location(getServer().getWorlds().get(0), x, getServer().getWorlds().get(0).getHighestBlockYAt(x,z)+120, z));
+	}
+	
+	public boolean createTeam(String name, ChatColor color) {
+		if (teams.size() <= 50) {
+			teams.add(new SwTeams(name, name, color, this));
+			return true;
+		}
+		return false;
+	}
+	
+	public SwTeams getTeam(String name) {
+		for(SwTeams t : teams) {
+			if (t.getName().equalsIgnoreCase(name)) return t;
+		}
+		return null;
+	}
+
+	@Override
+	public void conversationAbandoned(ConversationAbandonedEvent abandonedEvent) {
+		if (!abandonedEvent.gracefulExit()) {
+			abandonedEvent.getContext().getForWhom().sendRawMessage(ChatColor.RED + "Abandonné par " + abandonedEvent.getCanceller().getClass().getName());
+		}
 	}
 }
