@@ -173,8 +173,68 @@ public class MainClass extends JavaPlugin implements ConversationAbandonedListen
 		return aliveTeams;
 	}
 	
+	@SuppressWarnings("unused")
 	private void Switch() {
-		//faire le système de switch
+		//le tableau switchs contiendra la liste des switchs pour toutes les teams
+		LinkedList<SwTeams> teams = new LinkedList<SwTeams>();
+		ArrayList<Integer> id = new ArrayList<Integer>();
+		ArrayList<SwTeams> switchs = new ArrayList<SwTeams>();
+		int nb = 0;
+		
+		for (SwTeams t : teams) {
+			id.add(nb);
+			nb++;
+		}
+		
+		int teamLoop2 = 0;
+		for(Integer teamLoop : id) {
+			switchs.add(teams.get(teamLoop));
+			switchs.add(teams.get(teamLoop++));
+			teamLoop2 = teamLoop;
+		}
+		switchs.remove(teamLoop2++);
+		switchs.add(teams.get(0));
+		//--------
+		
+		//on fait les switchs
+		SwTeams team_a = null;
+		SwTeams team_b = null;
+		int playerLoop = 0;
+		int playerLoop2 = 0;
+		for(SwTeams switchTeam : switchs) {
+			if(playerLoop == 0) {
+				team_a = switchs.get(playerLoop2);
+			}
+			else if(playerLoop == 1) {
+				team_b = switchs.get(playerLoop2);
+				playerLoop = 0;
+			}
+			
+			SwitchPlayers(randomPlayer(team_a), randomPlayer(team_b));
+			
+			playerLoop++;
+			playerLoop2++;
+		}
+	}
+	
+	private Player randomPlayer(SwTeams team_x) {
+		ArrayList<Player> players = team_x.getPlayers();
+		int randomPlayer = 0;
+		
+		return players.get(randomPlayer);
+	}
+
+	private void SwitchPlayers(Player a, Player b) {
+		Location coord_a = a.getLocation();
+		Location coord_b = a.getLocation();
+		
+		a.getLocation().setX(coord_a.getX());
+		a.getLocation().setY(coord_a.getY());
+		a.getLocation().setZ(coord_a.getZ());
+		
+		b.getLocation().setX(coord_b.getX());
+		b.getLocation().setY(coord_b.getY());
+		b.getLocation().setZ(coord_b.getZ());
 	}
 	
 	private int switchs[][];
@@ -406,7 +466,7 @@ public class MainClass extends JavaPlugin implements ConversationAbandonedListen
 	}
 
 	public void ShowConfigLog() {
-		this.log.info("[KTP] Default config:");
+		this.log.info("[Switch-The-Patrick] Default config:");
 		this.log.info("-----------------------------------");
 		this.log.info("episodeLength: " + this.getConfig().getInt("episodeLength"));
 		this.log.info("weather: " + this.getConfig().getBoolean("weather"));
@@ -427,7 +487,7 @@ public class MainClass extends JavaPlugin implements ConversationAbandonedListen
 	}
 	
 	public void ShowConfigPlayer(Player pl) {
-		pl.sendMessage(ChatColor.RED + "[KTP] Default config:");
+		pl.sendMessage(ChatColor.RED + "[Switch-The-Patrick] Default config:");
 		pl.sendMessage(ChatColor.RED + "-----------------------------------");
 		pl.sendMessage(ChatColor.WHITE + "episodeLength: " + ChatColor.GRAY + this.getConfig().getInt("episodeLength"));
 		pl.sendMessage(ChatColor.WHITE + "weather: " + ChatColor.GRAY + this.getConfig().getBoolean("weather"));
