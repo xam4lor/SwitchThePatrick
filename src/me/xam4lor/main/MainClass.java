@@ -46,7 +46,6 @@ public class MainClass extends JavaPlugin implements ConversationAbandonedListen
 	private boolean gameRunning = false;
 	private HashSet<String> deadPlayers = new HashSet<String>();
 	private Scoreboard sb = null;
-	private String sbobjname = "STP";
 	private Integer episode = 0;
 	private Integer minutesLeft = 0;
 	private Integer secondsLeft = 0;
@@ -61,7 +60,7 @@ public class MainClass extends JavaPlugin implements ConversationAbandonedListen
 	@Override
 	public void onEnable() {
 		
-		File positions = new File("positions.txt");
+		File positions = new File("\\positions.txt");
 		if (positions.exists()) {
 			BufferedReader br = null;
 			try {
@@ -140,9 +139,8 @@ public class MainClass extends JavaPlugin implements ConversationAbandonedListen
 		getServer().getWorlds().get(0).setDifficulty(Difficulty.HARD);
 	}
 	
-	@SuppressWarnings("deprecation")
 	public void setMatchInfo() {
-		Objective obj = null;
+		/*Objective obj = null;
 		try {
 			obj = sb.getObjective(sbobjname);
 			obj.setDisplaySlot(null);
@@ -160,70 +158,64 @@ public class MainClass extends JavaPlugin implements ConversationAbandonedListen
 		obj.getScore(Bukkit.getOfflinePlayer(ChatColor.WHITE + "" + Bukkit.getServer().getOnlinePlayers().toArray().length + ChatColor.GRAY + " joueurs")).setScore(4);
 		obj.getScore(Bukkit.getOfflinePlayer(ChatColor.WHITE+""+getAliveTeams().size()+ChatColor.GRAY+" teams")).setScore(3);
 		obj.getScore(Bukkit.getOfflinePlayer("----")).setScore(2);
-		obj.getScore(Bukkit.getOfflinePlayer(ChatColor.WHITE+formatter.format(this.minutesLeft)+ChatColor.GRAY+":"+ChatColor.WHITE+formatter.format(this.secondsLeft))).setScore(1);
-	}
-	
-	private ArrayList<SwTeams> getAliveTeams() {
-		ArrayList<SwTeams> aliveTeams = new ArrayList<SwTeams>();
-		for (SwTeams t : teams) {
-			for (Player p : t.getPlayers()) {
-				if (p.isOnline() && !aliveTeams.contains(t)) aliveTeams.add(t);
-			}
-		}
-		return aliveTeams;
+		obj.getScore(Bukkit.getOfflinePlayer(ChatColor.WHITE+formatter.format(this.minutesLeft)+ChatColor.GRAY+":"+ChatColor.WHITE+formatter.format(this.secondsLeft))).setScore(1);*/
+		Bukkit.getServer().broadcastMessage(ChatColor.WHITE+formatter.format(this.minutesLeft)+ChatColor.GRAY+":"+ChatColor.WHITE+formatter.format(this.secondsLeft));
 	}
 	
 	@SuppressWarnings("unused")
 	private void Switch() {
 		//le tableau switchs contiendra la liste des switchs pour toutes les teams
-		LinkedList<SwTeams> teams = new LinkedList<SwTeams>();
-		ArrayList<Integer> id = new ArrayList<Integer>();
 		ArrayList<SwTeams> switchs = new ArrayList<SwTeams>();
-		int nb = 0;
 		
 		for (SwTeams t : teams) {
-			id.add(nb);
-			nb++;
+			switchs.add(t);
 		}
-		
-		int teamLoop2 = 0;
-		for(Integer teamLoop : id) {
-			switchs.add(teams.get(teamLoop));
-			switchs.add(teams.get(teamLoop++));
-			teamLoop2 = teamLoop;
-		}
-		switchs.remove(teamLoop2++);
-		switchs.add(teams.get(0));
-		//--------
 		
 		//on fait les switchs
 		SwTeams team_a = null;
 		SwTeams team_b = null;
+		Player player_a = null;
+		Player player_b = null;
 		int playerLoop = 0;
 		int playerLoop2 = 0;
+		
 		for(SwTeams switchTeam : switchs) {
 			if(playerLoop == 0) {
 				team_a = switchs.get(playerLoop2);
+				
+				playerLoop++;
 			}
+			
 			else if(playerLoop == 1) {
 				team_b = switchs.get(playerLoop2);
+				
+				/*for(Player p : team_b.getPlayers()) {
+					player_a = p;
+				}
+				
+				for(Player p : team_a.getPlayers()) {
+					player_b = p;
+				}*/
+				
+				Collection<? extends Player> ps = Bukkit.getServer().getOnlinePlayers();
+				
+				for (Player pp : ps) {
+					if(pp.getCustomName() == "xam4lor") {
+						player_a = pp;
+					}
+					if(pp.getCustomName() == "tane4lor") {
+						player_b = pp;
+					}
+				}
+				
+				SwitchPlayers(player_a, player_b);
 				playerLoop = 0;
 			}
 			
-			SwitchPlayers(randomPlayer(team_a), randomPlayer(team_b));
-			
-			playerLoop++;
 			playerLoop2++;
 		}
 	}
 	
-	private Player randomPlayer(SwTeams team_x) {
-		ArrayList<Player> players = team_x.getPlayers();
-		int randomPlayer = 0;
-		
-		return players.get(randomPlayer);
-	}
-
 	private void SwitchPlayers(Player a, Player b) {
 		Location coord_a = a.getLocation();
 		Location coord_b = a.getLocation();
@@ -507,10 +499,7 @@ public class MainClass extends JavaPlugin implements ConversationAbandonedListen
 		pl.sendMessage(ChatColor.RED + "-----------------------------------");
 	}
 	
-	private String getScoreboardName() {
-		return this.getConfig().getString("scoreboard");
-	}
-	
+
 	public void shiftEpisode() {
 		this.episode++;
 	}

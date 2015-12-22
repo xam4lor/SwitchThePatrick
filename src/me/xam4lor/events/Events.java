@@ -81,7 +81,7 @@ public class Events implements Listener {
 		if(m.getPlayerLength() == 1) {
 			for (Player pp : ps) {
 				if(pp.getGameMode() == GameMode.SURVIVAL) {
-					Bukkit.broadcastMessage(ChatColor.YELLOW + ev.getEntity().getName() + ChatColor.GREEN + " gagne la partie !!!");
+					Bukkit.broadcastMessage(ChatColor.YELLOW + pp.getName() + ChatColor.GREEN + " gagne la partie !!!");
 					m.setGameRunning(false);
 					pp.setGameMode(GameMode.SPECTATOR);
 					Bukkit.broadcastMessage(ChatColor.RED + "Si vous voulez recommencer une partie, pour plus de sécurité, veuillez relancer votre serveur. Merci !");
