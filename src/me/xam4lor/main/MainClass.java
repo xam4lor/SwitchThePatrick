@@ -188,24 +188,15 @@ public class MainClass extends JavaPlugin implements ConversationAbandonedListen
 			
 			else if(playerLoop == 1) {
 				team_b = switchs.get(playerLoop2);
+				int playerTeamA = 0;
+				int playerTeamB = 0;
 				
-				/*for(Player p : team_b.getPlayers()) {
-					player_a = p;
+				while(playerTeamA != team_a.getPlayers().size()) {
+					player_a = team_a.getPlayers().get(playerTeamA);
 				}
 				
-				for(Player p : team_a.getPlayers()) {
-					player_b = p;
-				}*/
-				
-				Collection<? extends Player> ps = Bukkit.getServer().getOnlinePlayers();
-				
-				for (Player pp : ps) {
-					if(pp.getCustomName() == "xam4lor") {
-						player_a = pp;
-					}
-					if(pp.getCustomName() == "tane4lor") {
-						player_b = pp;
-					}
+				while(playerTeamB != team_b.getPlayers().size()) {
+					player_b = team_b.getPlayers().get(playerTeamB);
 				}
 				
 				SwitchPlayers(player_a, player_b);
@@ -220,13 +211,13 @@ public class MainClass extends JavaPlugin implements ConversationAbandonedListen
 		Location coord_a = a.getLocation();
 		Location coord_b = a.getLocation();
 		
-		a.getLocation().setX(coord_a.getX());
-		a.getLocation().setY(coord_a.getY());
-		a.getLocation().setZ(coord_a.getZ());
+		a.getLocation().setX(coord_b.getX());
+		a.getLocation().setY(coord_b.getY());
+		a.getLocation().setZ(coord_b.getZ());
 		
-		b.getLocation().setX(coord_b.getX());
-		b.getLocation().setY(coord_b.getY());
-		b.getLocation().setZ(coord_b.getZ());
+		b.getLocation().setX(coord_a.getX());
+		b.getLocation().setY(coord_a.getY());
+		b.getLocation().setZ(coord_a.getZ());
 	}
 	
 	private int switchs[][];
