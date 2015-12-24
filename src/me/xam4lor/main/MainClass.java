@@ -180,30 +180,35 @@ public class MainClass extends JavaPlugin implements ConversationAbandonedListen
 		int playerLoop2 = 0;
 		
 		for(SwTeams switchTeam : switchs) {
-			if(playerLoop == 0) {
-				team_a = switchs.get(playerLoop2);
-				
-				playerLoop++;
-			}
-			
-			else if(playerLoop == 1) {
-				team_b = switchs.get(playerLoop2);
-				int playerTeamA = 0;
-				int playerTeamB = 0;
-				
-				while(playerTeamA != team_a.getPlayers().size()) {
-					player_a = team_a.getPlayers().get(playerTeamA);
+			try {
+				if(playerLoop == 0) {
+					team_a = switchs.get(playerLoop2);
+					
+					playerLoop++;
 				}
 				
-				while(playerTeamB != team_b.getPlayers().size()) {
-					player_b = team_b.getPlayers().get(playerTeamB);
+				else if(playerLoop == 1) {
+					team_b = switchs.get(playerLoop2);
+					int playerTeamA = 0;
+					int playerTeamB = 0;
+					
+					while(playerTeamA != team_a.getPlayers().size()) {
+						player_a = team_a.getPlayers().get(playerTeamA);
+					}
+					
+					while(playerTeamB != team_b.getPlayers().size()) {
+						player_b = team_b.getPlayers().get(playerTeamB);
+					}
+					
+					SwitchPlayers(player_a, player_b);
+					playerLoop = 0;
 				}
 				
-				SwitchPlayers(player_a, player_b);
-				playerLoop = 0;
+				playerLoop2++;
 			}
-			
-			playerLoop2++;
+			catch(Exception e) {
+				e.printStackTrace();
+			}
 		}
 	}
 	
